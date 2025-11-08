@@ -1,208 +1,215 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulador de Prateleiras</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background-color: #fafafa;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Planograma Interativo</title>
+    <style>
+        /* --- ESTILOS GERAIS --- */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #fafafa;
+        }
 
-  h1 {
-    text-align: center;
-  }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
 
-  #controls {
-    margin-bottom: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    justify-content: center;
-  }
+        #controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+        }
 
-  #shelvesContainer {
-    display: grid;
-    gap: 12px;
-  }
+        #shelvesContainer {
+            display: grid;
+            gap: 12px;
+            padding: 10px;
+            border: 2px solid #555;
+            background-color: #ccc; /* Cor de fundo da estrutura do display */
+        }
 
-  /* --- PRATELEIRAS MAIS RETANGULARES --- */
-  .shelf {
-    position: relative;
-    border: 2px solid #444;
-    background: #f5f5f5;
-    height: 120px; /* altura menor para parecer mais “reta” */
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 6px 10px;
-    justify-content: flex-start;
-    align-items: flex-end;
-    overflow: hidden;
-    border-radius: 6px;
-  }
+        /* --- PRATELEIRAS (O PONTO PRINCIPAL) --- */
+        .shelf {
+            position: relative;
+            border-bottom: 5px solid #a07d58; /* Borda inferior mais escura simula a prateleira */
+            background: #fff; /* Fundo branco para os produtos se destacarem */
+            height: 120px; /* Altura da prateleira */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px; /* Espaço **mais curto** entre os produtos */
+            padding: 5px;
+            justify-content: flex-start;
+            align-items: flex-end; /* **MUITO IMPORTANTE:** Alinha produtos ao chão da prateleira */
+            overflow-x: auto; /* Permite rolar horizontalmente se houver muitos produtos */
+            overflow-y: hidden;
+            border-radius: 2px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+        }
 
-  /* --- CAMPO DE TEXTO CENTRAL --- */
-  .shelf-label {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60%;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(0,0,0,0.15);
-    border-radius: 6px;
-    font-size: 14px;
-    color: #333;
-    padding: 3px 5px;
-    pointer-events: auto;
-  }
+        /* --- CAMPO DE TEXTO CENTRAL (RÓTULO) --- */
+        .shelf-label {
+            position: absolute;
+            top: 5px; /* Mudei para o topo para não bloquear o clique no centro */
+            left: 5px;
+            width: auto;
+            max-width: 95%;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 4px;
+            font-size: 12px;
+            color: #333;
+            padding: 2px 4px;
+            z-index: 10;
+        }
 
-  .shelf-label:focus {
-    outline: none;
-    background: rgba(255, 255, 255, 0.85);
-  }
+        .shelf-label:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.95);
+        }
 
-  /* --- PRODUTOS (MENORES) --- */
-  .item {
-    border-radius: 3px;
-    cursor: pointer;
-    transition: transform 0.1s;
-  }
+        /* --- PRODUTOS --- */
+        .item {
+            border-radius: 3px;
+            cursor: move; /* Indica que é móvel (se implementarmos Drag&Drop depois) */
+            transition: transform 0.1s, box-shadow 0.2s;
+            position: relative; /* Para garantir alinhamento correto */
+            margin-bottom: 0; /* Garante que não haja margem na base */
+        }
 
-  .item:hover {
-    transform: scale(1.1);
-  }
+        .item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
 
-  /* Tipos de produtos menores */
-  .small {
-    width: 25px;
-    height: 35px;
-    background-color: #ffb347;
-  }
-  .medium {
-    width: 35px;
-    height: 45px;
-    background-color: #77dd77;
-  }
-  .large {
-    width: 45px;
-    height: 55px;
-    background-color: #84b6f4;
-  }
-  .tall {
-    width: 30px;
-    height: 60px;
-    background-color: #fdcae1;
-  }
-  .wide {
-    width: 55px;
-    height: 35px;
-    background-color: #cbaacb;
-  }
+        /* Tipos de produtos e tamanhos mantidos */
+        .small { width: 25px; height: 35px; background-color: #ffb347; }
+        .medium { width: 35px; height: 45px; background-color: #77dd77; }
+        .large { width: 45px; height: 55px; background-color: #84b6f4; }
+        .tall { width: 30px; height: 60px; background-color: #fdcae1; }
+        .wide { width: 55px; height: 35px; background-color: #cbaacb; }
 
-  /* Paleta de produtos */
-  #productPalette {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 20px;
-  }
+        /* Paleta de produtos */
+        #productPalette {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
 
-  .palette-item {
-    border: 2px solid transparent;
-    cursor: pointer;
-  }
+        .palette-item {
+            border: 3px solid transparent;
+            cursor: pointer;
+        }
 
-  .palette-item.selected {
-    border-color: #ff6600;
-  }
+        .palette-item.selected {
+            border-color: #ff6600;
+            box-shadow: 0 0 10px #ff6600;
+        }
 
-</style>
+    </style>
 </head>
 <body>
 
-<h1>🛒 Simulador de Prateleiras de Supermercado</h1>
+<h1>🛒 Simulador de Planograma Interativo</h1>
 
 <div id="controls">
-  <label>Colunas: <input type="number" id="numCols" value="3" min="1"></label>
-  <label>Prateleiras (linhas): <input type="number" id="numShelves" value="4" min="1"></label>
-  <button id="buildBtn">Construir prateleiras</button>
+    <label>Colunas: <input type="number" id="numCols" value="3" min="1" max="10"></label>
+    <label>Prateleiras (linhas): <input type="number" id="numShelves" value="4" min="1" max="10"></label>
+    <button id="buildBtn">Construir Layout</button>
 </div>
 
-<h3 style="text-align:center;">Escolha o tipo de mercadoria:</h3>
+<h3 style="text-align:center;">Passo 1: Escolha o tipo de mercadoria</h3>
 <div id="productPalette">
-  <div class="palette-item small" data-type="small"></div>
-  <div class="palette-item medium" data-type="medium"></div>
-  <div class="palette-item large" data-type="large"></div>
-  <div class="palette-item tall" data-type="tall"></div>
-  <div class="palette-item wide" data-type="wide"></div>
+    <div class="palette-item small" data-type="small"></div>
+    <div class="palette-item medium" data-type="medium"></div>
+    <div class="palette-item large" data-type="large"></div>
+    <div class="palette-item tall" data-type="tall"></div>
+    <div class="palette-item wide" data-type="wide"></div>
 </div>
+
+<h3 style="text-align:center;">Passo 2: Clique em qualquer prateleira para adicionar o produto.</h3>
 
 <div id="shelvesContainer"></div>
 
 <script>
-  const shelvesContainer = document.getElementById('shelvesContainer');
-  const buildBtn = document.getElementById('buildBtn');
-  const paletteItems = document.querySelectorAll('.palette-item');
-  let selectedType = null;
+    const shelvesContainer = document.getElementById('shelvesContainer');
+    const buildBtn = document.getElementById('buildBtn');
+    const paletteItems = document.querySelectorAll('.palette-item');
+    let selectedType = null;
 
-  // Seleciona o tipo de produto
-  paletteItems.forEach(item => {
-    item.addEventListener('click', () => {
-      paletteItems.forEach(p => p.classList.remove('selected'));
-      item.classList.add('selected');
-      selectedType = item.dataset.type;
+    // Seleciona o tipo de produto
+    paletteItems.forEach(item => {
+        item.addEventListener('click', () => {
+            paletteItems.forEach(p => p.classList.remove('selected'));
+            item.classList.add('selected');
+            selectedType = item.dataset.type;
+        });
     });
-  });
 
-  // Monta as prateleiras
-  buildBtn.addEventListener('click', () => {
-    const cols = parseInt(document.getElementById('numCols').value);
-    const rows = parseInt(document.getElementById('numShelves').value);
+    // Monta as prateleiras
+    buildBtn.addEventListener('click', () => {
+        const cols = parseInt(document.getElementById('numCols').value);
+        const rows = parseInt(document.getElementById('numShelves').value);
 
-    shelvesContainer.innerHTML = '';
-    shelvesContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        shelvesContainer.innerHTML = '';
+        shelvesContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
-    for (let i = 0; i < rows * cols; i++) {
-      const shelf = document.createElement('div');
-      shelf.className = 'shelf';
-      shelf.dataset.index = i;
+        for (let i = 0; i < rows * cols; i++) {
+            const shelf = document.createElement('div');
+            shelf.className = 'shelf';
+            shelf.dataset.index = i;
 
-      // Campo de texto no centro
-      const label = document.createElement('input');
-      label.className = 'shelf-label';
-      label.type = 'text';
-      label.placeholder = 'Digite o nome da seção...';
+            // Campo de texto no topo
+            const label = document.createElement('input');
+            label.className = 'shelf-label';
+            label.type = 'text';
+            label.placeholder = `Seção ${i + 1} (Ex: Café)`;
 
-      shelf.appendChild(label);
-      shelf.addEventListener('click', (e) => {
-        if (e.target.classList.contains('shelf-label')) return;
-        addProduct(shelf);
-      });
+            shelf.appendChild(label);
+            
+            // Adiciona o produto ao clicar na prateleira
+            shelf.addEventListener('click', (e) => {
+                // Impede a adição de produto se o clique for no campo de texto
+                if (e.target.classList.contains('shelf-label')) return;
+                addProduct(shelf);
+            });
 
-      shelvesContainer.appendChild(shelf);
+            shelvesContainer.appendChild(shelf);
+        }
+    });
+
+    // Adiciona o produto clicado na prateleira
+    function addProduct(shelf) {
+        if (!selectedType) {
+            alert('Escolha primeiro um tipo de mercadoria na paleta!');
+            return;
+        }
+        const item = document.createElement('div');
+        item.classList.add('item', selectedType);
+        
+        // Remove o item se for clicado
+        item.addEventListener('click', (e) => {
+            e.stopPropagation(); // Impede que o clique suba para a prateleira
+            item.remove();
+        });
+        
+        shelf.appendChild(item);
     }
-  });
 
-  // Adiciona o produto clicado na prateleira
-  function addProduct(shelf) {
-    if (!selectedType) {
-      alert('Escolha primeiro um tipo de mercadoria!');
-      return;
-    }
-    const item = document.createElement('div');
-    item.classList.add('item', selectedType);
-    shelf.appendChild(item);
-  }
-
-  // Inicializa com valores padrão
-  buildBtn.click();
+    // Inicializa com valores padrão
+    buildBtn.click();
 </script>
 
 </body>
