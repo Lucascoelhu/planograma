@@ -1,205 +1,138 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Planograma - Grid Interno e Novas Dimensões</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simulador de Planograma - Avançado</title>
     <style>
         /* --- ESTILOS GERAIS --- */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #fafafa;
-        }
+        :root{--accent:#ff6600}
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #fafafa; }
+        h1 { text-align: center; color: #333; }
 
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-
-        #controls {
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #fff;
-        }
-
-        #shelvesContainer {
-            display: grid;
-            gap: 12px;
-            padding: 10px;
-            border: 2px solid #555;
-            background-color: #ccc;
-        }
+        #controls { margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background-color: #fff; }
+        #shelvesContainer { display: grid; gap: 12px; padding: 10px; border: 2px solid #555; background-color: #ccc; }
 
         /* --- PRATELEIRAS COM GRID INTERNO --- */
-        .shelf {
-            position: relative;
-            border-bottom: 5px solid #a07d58;
-            background: #fff;
-            height: 120px; /* Altura da prateleira */
-            padding: 5px;
-            border-radius: 2px;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+        .shelf { position: relative; border-bottom: 5px solid #a07d58; background: #fff; height: 120px; padding: 5px; border-radius: 2px; box-shadow: inset 0 0 5px rgba(0,0,0,0.05); display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); grid-template-rows: repeat(auto-fill, minmax(30px, 1fr)); gap: 2px; overflow: auto; }
+        .shelf.active { box-shadow: 0 0 0 2px #4CAF50 inset; }
 
-            /* CRUCIAL: Grid para o layout interno da prateleira */
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); /* Colunas flexíveis, mínimo de 40px */
-            grid-template-rows: repeat(auto-fill, minmax(30px, 1fr)); /* Linhas flexíveis, mínimo de 30px */
-            gap: 2px; /* Espaçamento entre as "células" */
-            overflow: auto; /* Permite scroll se os itens ultrapassarem */
-        }
-        
-        /* A prateleira em si é a área clicável */
-        .shelf.active {
-            box-shadow: 0 0 0 2px #4CAF50 inset; /* Borda verde suave para indicar onde clicar */
-        }
+        /* contador por seção */
+        .shelf-counter { position: absolute; right: 6px; top: 6px; background: rgba(0,0,0,0.65); color: #fff; padding: 3px 8px; border-radius: 12px; font-size: 12px; z-index: 50; }
 
-        /* --- CÉLULA (Onde o produto será colocado) --- */
-        .shelf-cell {
-            position: relative; /* Para os itens se posicionarem dentro */
-            width: 100%; /* Ocupa a largura da célula do grid */
-            height: 100%; /* Ocupa a altura da célula do grid */
-            /* border: 1px dashed rgba(0,0,0,0.1); /* Opcional: para visualizar as células */
-            display: flex; /* Para alinhar o item dentro da célula */
-            justify-content: center; /* Centraliza horizontalmente */
-            align-items: flex-end; /* Alinha na parte de baixo da célula */
-        }
-        /* Efeito visual ao passar o mouse */
-        .shelf-cell:hover {
-            background-color: rgba(0,0,0,0.05);
-            cursor: pointer;
-        }
+        /* --- CÉLULA --- */
+        .shelf-cell { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: flex-end; }
+        .shelf-cell:hover { background-color: rgba(0,0,0,0.03); cursor: pointer; }
 
-        /* --- CAMPO DE TEXTO (MANTIDO, mas talvez reposicionado) --- */
-        .shelf-label {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            width: auto;
-            max-width: 95%;
-            text-align: left;
-            background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(0,0,0,0.15);
-            border-radius: 4px;
-            font-size: 12px;
-            color: #333;
-            padding: 2px 4px;
-            z-index: 10;
-        }
-
-        .shelf-label:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.95);
-        }
+        .shelf-label { position: absolute; top: 5px; left: 5px; width: auto; max-width: 60%; text-align: left; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.12); border-radius: 4px; font-size: 12px; color: #333; padding: 2px 6px; z-index: 40; }
+        .shelf-label:focus { outline: none; background: rgba(255,255,255,0.98); }
 
         /* --- PRODUTOS --- */
-        .item {
-            border-radius: 3px;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.2s;
-            position: absolute; /* O item é posicionado dentro da CELL */
-            bottom: 0; /* Alinha o item na base da célula */
-            z-index: 5;
-            /* width e height específicos para cada tipo abaixo */
-        }
+        .item { border-radius: 3px; cursor: grab; transition: transform 0.12s, box-shadow 0.2s; position: absolute; bottom: 0; z-index: 20; display: flex; align-items: center; justify-content: center; }
+        .item:active { cursor: grabbing; }
+        .item:hover { transform: scale(1.05); box-shadow: 0 0 8px rgba(0,0,0,0.4); }
 
-        .item:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-        }
+        /* pequeno painel de nome sobre o item */
+        .item .name { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #fff; padding: 2px 6px; font-size: 11px; border-radius: 4px; white-space: nowrap; z-index: 30; display: none; }
+        .item.has-name .name { display: block; }
 
-        /* --- TIPOS DE PRODUTOS (NOVAS DIMENSÕES) --- */
-        /* Itens originais */
+        /* botão de remover pequeno */
+        .item .remove-btn { position: absolute; top: -8px; right: -8px; width: 18px; height: 18px; border-radius: 50%; font-size: 12px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.12); cursor: pointer; z-index: 40; }
+
+        /* --- TIPOS DE PRODUTOS (DIMENSÕES) --- */
         .small { width: 25px; height: 35px; background-color: #ffb347; }
         .medium { width: 35px; height: 45px; background-color: #77dd77; }
         .large { width: 45px; height: 55px; background-color: #84b6f4; }
         .tall { width: 30px; height: 60px; background-color: #fdcae1; }
         .wide { width: 55px; height: 35px; background-color: #cbaacb; }
-        
-        /* Novas Variedades */
-        .cereal { width: 50px; height: 90px; background-color: #9b59b6; border: 2px solid #8e44ad;} 
-        .lata { width: 25px; height: 75px; background-color: #e74c3c; border-radius: 50%; } 
-        .recheados { width: 80px; height: 30px; background-color: #f1c40f; border-radius: 6px; } 
-        .cafe { width: 40px; height: 40px; background-color: #6d4c41; border-radius: 50%;} 
-        .frasco { width: 35px; height: 50px; background-color: #1abc9c; border-radius: 50% 50% 0 0;} 
+        .cereal { width: 50px; height: 90px; background-color: #9b59b6; border: 2px solid #8e44ad; }
+        .lata { width: 25px; height: 75px; background-color: #e74c3c; border-radius: 50%; }
+        .recheados { width: 80px; height: 30px; background-color: #f1c40f; border-radius: 6px; }
+        .cafe { width: 40px; height: 40px; background-color: #6d4c41; border-radius: 50%; }
+        .frasco { width: 35px; height: 50px; background-color: #1abc9c; border-radius: 50% 50% 0 0; }
+        .thin-tall { width: 20px; height: 80px; background-color: #ff7f50; border: 1px solid #d45d31; }
+        .thin-wide { width: 70px; height: 20px; background-color: #6a5acd; border: 1px solid #483d8b; }
 
-        /* NOVOS PRODUTOS FINOS E COMPRIDOS */
-        .thin-tall { width: 20px; height: 80px; background-color: #ff7f50; border: 1px solid #d45d31; } /* Fino e Alto */
-        .thin-wide { width: 70px; height: 20px; background-color: #6a5acd; border: 1px solid #483d8b; } /* Fino e Largo */
+        /* paleta */
+        #productPalette { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 8px; background-color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.06); }
+        .palette-item { border: 3px solid transparent; cursor: pointer; width: 45px; height: 45px; border-radius: 4px; display:flex; align-items:center; justify-content:center; }
+        .palette-item.selected { border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
 
-        /* Paleta de produtos (MANTIDA) */
-        #productPalette {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-        }
+        /* modal simples */
+        #modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); z-index: 200; }
+        #modal .card { background:#fff; padding:14px; border-radius:8px; width:320px; box-shadow:0 6px 20px rgba(0,0,0,0.2); }
+        #modal label{display:block;margin-bottom:6px;font-weight:600}
+        #modal input{width:100%;padding:8px;margin-bottom:10px}
+        #modal .actions{display:flex;gap:8px;justify-content:flex-end}
+        button{cursor:pointer}
 
-        .palette-item {
-            border: 3px solid transparent;
-            cursor: pointer;
-            width: 45px;
-            height: 45px;
-            border-radius: 4px;
-        }
-
-        .palette-item.selected {
-            border-color: #ff6600;
-            box-shadow: 0 0 10px #ff6600;
-        }
+        /* responsive small */
+        @media (max-width:700px){ .shelf{height:140px} }
 
     </style>
 </head>
 <body>
 
-<h1>🛒 Simulador de Planograma Interativo</h1>
+<h1>🛒 Simulador de Planograma — Avançado</h1>
 
 <div id="controls">
     <label>Colunas: <input type="number" id="numCols" value="3" min="1" max="10"></label>
     <label>Prateleiras (linhas): <input type="number" id="numShelves" value="4" min="1" max="10"></label>
     <button id="buildBtn">Construir Layout</button>
+
+    <div style="width:1px;height:1px"></div>
+
+    <button id="exportPngBtn">Salvar como imagem (PNG)</button>
+    <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="includeUI"> Incluir controles no print</label>
 </div>
 
-<h3 style="text-align:center;">Passo 1: Escolha o tipo de mercadoria</h3>
+<h3 style="text-align:center;margin-top:4px">Passo 1: Escolha o tipo de mercadoria</h3>
 <div id="productPalette">
-    <div class="palette-item small" data-type="small"></div>
-    <div class="palette-item medium" data-type="medium"></div>
-    <div class="palette-item large" data-type="large"></div>
-    <div class="palette-item tall" data-type="tall"></div>
-    <div class="palette-item wide" data-type="wide"></div>
-    
-    <div class="palette-item cereal" data-type="cereal"></div>
-    <div class="palette-item lata" data-type="lata"></div>
-    <div class="palette-item recheados" data-type="recheados"></div>
-    <div class="palette-item cafe" data-type="cafe"></div>
-    <div class="palette-item frasco" data-type="frasco"></div>
-
-    <div class="palette-item thin-tall" data-type="thin-tall"></div>
-    <div class="palette-item thin-wide" data-type="thin-wide"></div>
+    <div class="palette-item small" data-type="small" title="small"></div>
+    <div class="palette-item medium" data-type="medium" title="medium"></div>
+    <div class="palette-item large" data-type="large" title="large"></div>
+    <div class="palette-item tall" data-type="tall" title="tall"></div>
+    <div class="palette-item wide" data-type="wide" title="wide"></div>
+    <div class="palette-item cereal" data-type="cereal" title="cereal"></div>
+    <div class="palette-item lata" data-type="lata" title="lata"></div>
+    <div class="palette-item recheados" data-type="recheados" title="recheados"></div>
+    <div class="palette-item cafe" data-type="cafe" title="cafe"></div>
+    <div class="palette-item frasco" data-type="frasco" title="frasco"></div>
+    <div class="palette-item thin-tall" data-type="thin-tall" title="thin-tall"></div>
+    <div class="palette-item thin-wide" data-type="thin-wide" title="thin-wide"></div>
 </div>
 
-<h3 style="text-align:center;">Passo 2: Clique em qualquer SLOT vazio da prateleira para adicionar o produto.</h3>
+<h3 style="text-align:center;margin:6px 0 0">Passo 2: Clique em qualquer SLOT vazio da prateleira para adicionar o produto. Clique no produto para editar nome. Arraste para mover.</h3>
 
 <div id="shelvesContainer"></div>
 
+<!-- modal para editar nome -->
+<div id="modal">
+    <div class="card">
+        <label for="productNameInput">Nome do produto</label>
+        <input id="productNameInput" type="text" placeholder="Ex: Cereal Snow Flakes 800g">
+        <div class="actions">
+            <button id="modalCancel">Cancelar</button>
+            <button id="modalSave">Salvar</button>
+        </div>
+    </div>
+</div>
+
 <script>
+    // Elementos
     const shelvesContainer = document.getElementById('shelvesContainer');
     const buildBtn = document.getElementById('buildBtn');
     const paletteItems = document.querySelectorAll('.palette-item');
+    const exportPngBtn = document.getElementById('exportPngBtn');
+    const includeUICheck = document.getElementById('includeUI');
+
+    const modal = document.getElementById('modal');
+    const productNameInput = document.getElementById('productNameInput');
+    const modalSave = document.getElementById('modalSave');
+    const modalCancel = document.getElementById('modalCancel');
+
     let selectedType = null;
+    let editingItem = null; // item atualmente sendo editado
 
     // Seleciona o tipo de produto
     paletteItems.forEach(item => {
@@ -210,8 +143,10 @@
         });
     });
 
-    // Monta as prateleiras
-    buildBtn.addEventListener('click', () => {
+    // constrói prateleiras
+    buildBtn.addEventListener('click', () => buildLayout());
+
+    function buildLayout(){
         const cols = parseInt(document.getElementById('numCols').value);
         const rows = parseInt(document.getElementById('numShelves').value);
 
@@ -223,69 +158,169 @@
             shelf.className = 'shelf';
             shelf.dataset.index = i;
 
-            // Campo de texto no topo
+            // etiqueta editavel
             const label = document.createElement('input');
             label.className = 'shelf-label';
             label.type = 'text';
             label.placeholder = `Seção ${i + 1}`;
-
             shelf.appendChild(label);
-            
-            // Adicionaremos células clicáveis DENTRO da prateleira
-            // Para simular slots fixos. Ex: 10 colunas x 3 linhas de slots
-            const numGridCols = 15; // Quantidade de "slots" horizontais na prateleira
-            const numGridRows = 3;  // Quantidade de "slots" verticais na prateleira
-            
-            for (let r = 0; r < numGridRows; r++) {
-                for (let c = 0; c < numGridCols; c++) {
+
+            // contador
+            const counter = document.createElement('div');
+            counter.className = 'shelf-counter';
+            counter.textContent = '0';
+            shelf.appendChild(counter);
+
+            const numGridCols = 15;
+            const numGridRows = 3;
+
+            for (let r = 0; r < numGridRows; r++){
+                for (let c = 0; c < numGridCols; c++){
                     const cell = document.createElement('div');
                     cell.className = 'shelf-cell';
                     cell.dataset.row = r;
                     cell.dataset.col = c;
-                    
+
+                    // permitimos drop
+                    cell.addEventListener('dragover', (ev) => ev.preventDefault());
+                    cell.addEventListener('drop', (ev) => {
+                        ev.preventDefault();
+                        const itemId = ev.dataTransfer.getData('text/plain');
+                        const item = document.getElementById(itemId);
+                        if (!item) return;
+                        // remove de onde estava e append neste cell
+                        item.parentElement && item.parentElement.removeChild(item);
+                        cell.appendChild(item);
+                        updateCounters();
+                    });
+
                     cell.addEventListener('click', (e) => {
-                        // Impede a adição de produto se o clique for no campo de texto
                         if (e.target.classList.contains('shelf-label')) return;
-                        addProduct(cell); // Adiciona na CÉLULA
+                        // se clicou na célula vazia, adiciona produto
+                        if (!cell.querySelector('.item')) addProduct(cell);
                     });
                     shelf.appendChild(cell);
                 }
             }
             shelvesContainer.appendChild(shelf);
         }
-    });
-
-    /**
-     * Adiciona o produto na célula clicada.
-     * @param {HTMLElement} cell O elemento da célula (div.shelf-cell).
-     */
-    function addProduct(cell) {
-        if (!selectedType) {
-            alert('Escolha primeiro um tipo de mercadoria na paleta!');
-            return;
-        }
-        
-        // Verifica se já existe um item nesta célula
-        if (cell.querySelector('.item')) {
-            // alert('Já existe um item nesta posição. Clique nele para remover.');
-            return; // Não adiciona se já houver item
-        }
-
-        const item = document.createElement('div');
-        item.classList.add('item', selectedType);
-        
-        // Remove o item se for clicado
-        item.addEventListener('click', (e) => {
-            e.stopPropagation(); // Impede que o clique suba para a célula
-            item.remove();
-        });
-        
-        cell.appendChild(item); // Adiciona o item dentro da CÉLULA
+        updateCounters();
     }
 
-    // Inicializa com valores padrão
-    buildBtn.click();
-</script>
+    // gera id único
+    function uid(prefix='it'){ return prefix + Math.random().toString(36).slice(2,9); }
 
+    function addProduct(cell){
+        if (!selectedType){ alert('Escolha primeiro um tipo de mercadoria na paleta!'); return; }
+        if (cell.querySelector('.item')) return; // já existe
+
+        const item = document.createElement('div');
+        const id = uid('item');
+        item.id = id;
+        item.classList.add('item', selectedType);
+        item.setAttribute('draggable', 'true');
+        item.dataset.type = selectedType;
+
+        // label interno (nome)
+        const nameTag = document.createElement('div');
+        nameTag.className = 'name';
+        nameTag.textContent = '';
+        item.appendChild(nameTag);
+
+        // botão remover
+        const removeBtn = document.createElement('div');
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '✕';
+        removeBtn.title = 'Remover';
+        removeBtn.addEventListener('click', (ev) => { ev.stopPropagation(); item.remove(); updateCounters(); });
+        item.appendChild(removeBtn);
+
+        // eventos drag
+        item.addEventListener('dragstart', (ev) => {
+            ev.dataTransfer.setData('text/plain', item.id);
+            // opcional: tiny ghost
+            const crt = item.cloneNode(true);
+            crt.style.position='absolute'; crt.style.left='-9999px'; crt.style.top='-9999px';
+            document.body.appendChild(crt);
+            ev.dataTransfer.setDragImage(crt, 10, 10);
+            setTimeout(()=> document.body.removeChild(crt), 0);
+        });
+
+        // clique abre modal de edição de nome
+        item.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            openEditModal(item);
+        });
+
+        cell.appendChild(item);
+        updateCounters();
+    }
+
+    // abre modal para editar nome do produto
+    function openEditModal(item){
+        editingItem = item;
+        const current = item.dataset.name || '';
+        productNameInput.value = current;
+        modal.style.display = 'flex';
+        productNameInput.focus();
+        productNameInput.select();
+    }
+
+    modalCancel.addEventListener('click', () => { editingItem = null; modal.style.display='none'; });
+    modalSave.addEventListener('click', () => {
+        if (!editingItem) return;
+        const val = productNameInput.value.trim();
+        if (val){ editingItem.dataset.name = val; editingItem.querySelector('.name').textContent = val; editingItem.classList.add('has-name'); }
+        else { delete editingItem.dataset.name; editingItem.querySelector('.name').textContent = ''; editingItem.classList.remove('has-name'); }
+        editingItem = null;
+        modal.style.display = 'none';
+    });
+
+    // contadores por prateleira
+    function updateCounters(){
+        document.querySelectorAll('.shelf').forEach(shelf => {
+            const count = shelf.querySelectorAll('.item').length;
+            const c = shelf.querySelector('.shelf-counter');
+            if (c) c.textContent = count;
+        });
+    }
+
+    // exportar imagem usando html2canvas via CDN
+    async function loadHtml2Canvas(){
+        if (window.html2canvas) return window.html2canvas;
+        return new Promise((res, rej) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+            s.onload = () => res(window.html2canvas || window.html2canvasDefault || window.html2canvas);
+            s.onerror = rej;
+            document.head.appendChild(s);
+        });
+    }
+
+    exportPngBtn.addEventListener('click', async () => {
+        const includeUI = includeUICheck.checked;
+        // elemento a capturar
+        let target = includeUI ? document.body : shelvesContainer;
+        try{
+            await loadHtml2Canvas();
+            html2canvas(target, { scale: 2 }).then(canvas => {
+                const a = document.createElement('a');
+                a.href = canvas.toDataURL('image/png');
+                a.download = 'planograma.png';
+                a.click();
+            });
+        } catch(e){
+            alert('Falha ao carregar a biblioteca de screenshot. Verifique conexão ou console.');
+            console.error(e);
+        }
+    });
+
+    // Inicializa
+    buildLayout();
+
+    // clique fora fecha modal
+    window.addEventListener('click', (ev) => { if (ev.target === modal) { editingItem = null; modal.style.display='none'; } });
+
+</script>
 </body>
 </html>
