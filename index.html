@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Planograma Flexível</title>
+<title>Planograma Mobile Final</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 <style>
     :root {
@@ -13,7 +13,6 @@
         --gondola-bg: #fff;
         --shelf-border: #95a5a6;
         --header-h: 50px;
-        --footer-h: 140px;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -22,34 +21,36 @@
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: var(--bg); 
         margin: 0; padding: 0; 
-        height: 100vh;
+        height: 100dvh; 
+        width: 100vw;
         overflow: hidden; 
         display: flex; flex-direction: column;
     }
 
-    /* --- Header --- */
+    /* --- Header (Fixo no topo) --- */
     header {
         height: var(--header-h);
         background: var(--primary); color: white; padding: 0 15px;
         display: flex; justify-content: space-between; align-items: center;
         box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        flex-shrink: 0;
+        flex: 0 0 auto; 
+        z-index: 10;
     }
     h1 { margin: 0; font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; }
-    .credits { font-size: 10px; font-weight: normal; opacity: 0.7; margin-top: 2px; }
+    .credits { font-size: 10px; font-weight: normal; opacity: 0.7; margin-top: 2px; color: #bdc3c7; }
 
     .header-btns button {
         background: rgba(255,255,255,0.2); border: none; color: white;
         padding: 6px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-left:5px;
     }
 
-    /* --- Corredor --- */
+    /* --- Corredor (Ocupa todo o espaço do meio) --- */
     #aisle-container {
-        flex: 1; 
+        flex: 1 1 auto; 
         display: flex; 
         flex-direction: row;
         overflow-x: auto; 
-        overflow-y: hidden;
+        overflow-y: hidden; 
         padding: 10px;
         gap: 8px;
         align-items: flex-start;
@@ -75,19 +76,21 @@
         text-align: center; font-size: 12px; color: #fff; 
         background: #7f8c8d; padding: 6px;
         display: flex; justify-content: space-between; align-items: center;
-        font-weight: bold; flex-shrink: 0;
+        font-weight: bold; flex: 0 0 auto;
     }
     .btn-del-gondola { background:none; border:none; color:#ffcfcf; font-weight:bold; font-size:16px; padding:0 5px;}
 
+    /* Área das prateleiras: Scroll interno se precisar */
     .shelf-area {
-        flex: 1;
+        flex: 1 1 auto; 
         overflow-y: auto; 
         padding: 5px 0;
+        display: flex; flex-direction: column; justify-content: flex-start; 
     }
 
-    /* --- Prateleira Row (Prateleira + Botões) --- */
+    /* --- Prateleira Row --- */
     .shelf-row {
-        display: flex; align-items: center; margin-bottom: 5px; padding-right: 5px;
+        display: flex; align-items: center; margin-bottom: 5px; padding-right: 5px; flex-shrink: 0;
     }
 
     .shelf-controls {
@@ -121,11 +124,15 @@
 
     /* Botão Add Prateleira */
     .btn-add-shelf-wrapper {
-        padding: 8px; border-top: 1px solid #eee; text-align: center; background: #f9f9f9;
+        padding: 8px; 
+        border-top: 1px solid #eee; 
+        text-align: center; 
+        background: #f9f9f9;
+        flex: 0 0 auto; 
     }
     .btn-add-shelf {
         background: #27ae60; color: white; border: none;
-        width: 100%; padding: 8px; border-radius: 4px;
+        width: 95%; padding: 8px; border-radius: 4px;
         font-weight: bold; font-size: 12px; cursor: pointer;
     }
 
@@ -141,19 +148,26 @@
     }
     .prod-label { pointer-events: none; padding:1px; text-shadow: 0 1px 1px rgba(0,0,0,0.5);}
 
-    /* --- Classes de Tamanho --- */
-    .sz-padrao   { width: 45px; height: 45px; }
-    .sz-fino     { width: 25px; height: 50px; }
-    .sz-largo    { width: 70px; height: 40px; }
-    .sz-garrafa  { width: 30px; height: 65px; border-radius: 10px 10px 3px 3px; }
-    .sz-grande   { width: 60px; height: 60px; }
-    .sz-baixo    { width: 50px; height: 25px; }
+    /* Classes de Tamanho */
+    .sz-padrao   { width: 45px; height: 45px; } /* Ex: Caixa de Leite */
+    .sz-fino     { width: 25px; height: 50px; } /* Ex: Pasta de dente, barra de chocolate */
+    .sz-largo    { width: 70px; height: 40px; } /* Ex: Pacote de Wafer, Arroz 1kg (deitado) */
+    .sz-garrafa  { width: 30px; height: 65px; border-radius: 10px 10px 3px 3px; } /* Ex: Refrigerante, Limpador */
+    .sz-grande   { width: 60px; height: 60px; } /* Ex: Cereal, Sabão em pó */
+    .sz-baixo    { width: 50px; height: 25px; } /* Ex: Lata de atum, Sabonete */
+    .sz-longa    { width: 50px; height: 60px; } /* Ex: Macarrão */
+    .sz-blister  { width: 80px; height: 20px; } /* Ex: Pilhas, Goma de Mascar */
 
-    /* --- Paleta Fixa --- */
+    /* --- Paleta Fixa (Rodapé) --- */
     #palette-container {
-        height: var(--footer-h); background: #fff; border-top: 2px solid #ccc;
-        display: flex; flex-direction: column; z-index: 100;
+        background: #fff; 
+        border-top: 2px solid #ccc;
+        display: flex; flex-direction: column; 
+        z-index: 100;
         box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+        flex: 0 0 auto; 
+        padding-bottom: env(safe-area-inset-bottom); 
+        min-height: 130px;
     }
     .palette-header {
         padding: 8px 15px; background: #f4f4f4; font-size: 12px; color: #555;
@@ -166,7 +180,7 @@
     }
 
     #palette-scroll {
-        flex: 1; overflow-x: auto; display: flex; align-items: center; gap: 12px; padding: 0 15px;
+        flex: 1; overflow-x: auto; display: flex; align-items: center; gap: 12px; padding: 10px 15px;
     }
     #palette-scroll .product { 
         flex-shrink: 0; margin-bottom: 0; transform: scale(0.9);
@@ -201,7 +215,7 @@
     </h1>
     <div class="header-btns">
         <button onclick="addGondola()">+ Módulo</button>
-        <button onclick="resetPlanogram()" style="background:#c0392b">Limpar Tudo</button>
+        <button onclick="resetPlanogram()" style="background:#c0392b">Reset</button>
     </div>
 </header>
 
@@ -209,8 +223,8 @@
 
 <div id="palette-container">
     <div class="palette-header">
-        <span>Arraste para a prateleira</span>
-        <button class="btn-add-type" onclick="openNewTypeModal()">+ Novo Item</button>
+        <span>Itens Prontos (Arraste)</span>
+        <button class="btn-add-type" onclick="openNewTypeModal()">+ Criar</button>
     </div>
     <div id="palette-scroll"></div>
 </div>
@@ -233,12 +247,14 @@
         <input type="text" id="newTypeName" placeholder="Nome (ex: Wafer)">
         <label style="text-align:left; display:block; font-size:12px; color:#666; margin-top:5px">Formato:</label>
         <select id="newTypeSize">
-            <option value="sz-padrao">Padrão (Quadrado)</option>
+            <option value="sz-padrao">Padrão (Ex: Caixa de Leite)</option>
             <option value="sz-fino">Fino (Ex: Pasta de dente)</option>
-            <option value="sz-largo">Largo (Ex: Wafer/Barra)</option>
+            <option value="sz-largo">Largo (Ex: Wafer/Arroz deitado)</option>
             <option value="sz-garrafa">Garrafa / Spray</option>
-            <option value="sz-baixo">Baixo (Ex: Atum/Sabonete)</option>
-            <option value="sz-grande">Grande (Ex: Sabão pó)</option>
+            <option value="sz-baixo">Baixo (Ex: Lata/Sabonete)</option>
+            <option value="sz-grande">Grande (Ex: Cereal/Sabão pó)</option>
+            <option value="sz-longa">Longa (Ex: Macarrão)</option>
+            <option value="sz-blister">Blister (Ex: Pilhas/Chiclete)</option>
         </select>
         <label style="text-align:left; display:block; font-size:12px; color:#666; margin-top:5px">Cor:</label>
         <input type="color" id="newTypeColor" value="#9b59b6" style="height:40px; padding:2px">
@@ -267,13 +283,36 @@
         if(savedPalette) {
             JSON.parse(savedPalette).forEach(p => addPaletteDom(p.name, p.color, p.size));
         } else {
-            // Paleta Inicial
-            addPaletteDom("Cola", "#c0392b", "sz-garrafa");
-            addPaletteDom("Wafer", "#8e44ad", "sz-largo");
-            addPaletteDom("Leite", "#2980b9", "sz-padrao");
-            addPaletteDom("Pasta", "#2ecc71", "sz-fino");
-            addPaletteDom("Sabão", "#e67e22", "sz-baixo");
-            addPaletteDom("Cereal", "#f1c40f", "sz-grande");
+            // PALETA COM 20 ITENS PRONTOS
+            const initialPalette = [
+                // Bebidas
+                { name: "Refr. Cola 2L", color: "#c0392b", size: "sz-garrafa" },
+                { name: "Suco Caixa 1L", color: "#e74c3c", size: "sz-padrao" },
+                { name: "Água C/ Gás", color: "#3498db", size: "sz-garrafa" },
+                { name: "Vinho 750ml", color: "#8e44ad", size: "sz-garrafa" },
+                // Matinais e Mercearia
+                { name: "Leite Integral", color: "#2980b9", size: "sz-padrao" },
+                { name: "Cereal Grande", color: "#f1c40f", size: "sz-grande" },
+                { name: "Café Pote", color: "#7f8c8d", size: "sz-padrao" },
+                { name: "Macarrão 500g", color: "#d35400", size: "sz-longa" },
+                { name: "Óleo de Soja", color: "#2ecc71", size: "sz-garrafa" },
+                { name: "Açúcar 1kg", color: "#95a5a6", size: "sz-padrao" },
+                // Biscoitos e Snacks
+                { name: "Biscoito Recheado", color: "#e67e22", size: "sz-largo" },
+                { name: "Wafer Morango", color: "#e91e63", size: "sz-largo" },
+                { name: "Salgadinho P", color: "#f39c12", size: "sz-padrao" },
+                { name: "Barra de Cereal", color: "#27ae60", size: "sz-fino" },
+                // Higiene e Limpeza
+                { name: "Pasta Dental", color: "#1abc9c", size: "sz-fino" },
+                { name: "Sabonete", color: "#bdc3c7", size: "sz-baixo" },
+                { name: "Desodorante Spray", color: "#9b59b6", size: "sz-garrafa" },
+                { name: "Sabão em Pó G", color: "#34495e", size: "sz-grande" },
+                { name: "Limpa Vidro", color: "#5dade2", size: "sz-garrafa" },
+                // Outros
+                { name: "Lata Atum", color: "#16a085", size: "sz-baixo" }
+            ];
+
+            initialPalette.forEach(p => addPaletteDom(p.name, p.color, p.size));
         }
 
         const savedGondolas = localStorage.getItem('proAisleData');
@@ -281,29 +320,16 @@
         if(savedGondolas) {
             JSON.parse(savedGondolas).forEach(gData => createGondolaDom(gData.shelves));
         } else {
-            // --- CENÁRIO INICIAL PRONTO ---
-            
-            // Gôndola 1: Bebidas e Snacks
-            createGondolaDom([
-                [{name:"Cola Mega", color:"#c0392b", size:"sz-grande"},{name:"Cola Mega", color:"#c0392b", size:"sz-grande"}],
-                [{name:"Cola", color:"#c0392b", size:"sz-garrafa"},{name:"Cola", color:"#c0392b", size:"sz-garrafa"},{name:"Guaraná", color:"#27ae60", size:"sz-garrafa"}],
-                [{name:"Wafer Choc", color:"#8e44ad", size:"sz-largo"},{name:"Wafer Morango", color:"#e91e63", size:"sz-largo"}],
-                [] // Prateleira vazia
-            ]);
-
-            // Gôndola 2: Matinais e Higiene
-            createGondolaDom([
-                [{name:"Cereal Matinal", color:"#f1c40f", size:"sz-grande"},{name:"Leite Integral", color:"#2980b9", size:"sz-padrao"},{name:"Leite Desn.", color:"#3498db", size:"sz-padrao"}],
-                [],
-                [{name:"Pasta Dental", color:"#2ecc71", size:"sz-fino"},{name:"Pasta Dental", color:"#2ecc71", size:"sz-fino"},{name:"Escova", color:"#bdc3c7", size:"sz-fino"}],
-                [{name:"Sabonete", color:"#e67e22", size:"sz-baixo"},{name:"Sabonete", color:"#e67e22", size:"sz-baixo"},{name:"Sabonete", color:"#e67e22", size:"sz-baixo"}]
-            ]);
+            // GÔNDOLAS INICIAIS VAZIAS
+            createGondolaDom([[],[],[],[],[]]);
+            createGondolaDom([[],[],[],[],[]]);
+            createGondolaDom([[],[],[],[],[]]);
         }
     }
 
-    /* --- GÔNDOLAS E PRATELEIRAS --- */
+    /* --- GÔNDOLAS --- */
     function addGondola() {
-        createGondolaDom([[],[],[]]); // Inicia com 3 prateleiras
+        createGondolaDom([[],[],[],[],[]]);
         saveState();
         setTimeout(() => aisle.scrollTo({ left: aisle.scrollWidth, behavior: 'smooth' }), 100);
     }
@@ -376,7 +402,7 @@
         }
     }
 
-    /* --- SORTABLE & FILL --- */
+    /* --- Lógica Sortable & Preenchimento --- */
     function setupShelfSortable(shelfElement) {
         new Sortable(shelfElement, {
             group: 'shared', animation: 150, ghostClass: 'ghost',
@@ -405,7 +431,7 @@
         }
     }
 
-    /* --- PRODUTOS --- */
+    /* --- Produtos --- */
     function createProductDom(name, color, size) {
         const el = document.createElement('div');
         setupProductElement(el, name, color, size);
@@ -422,7 +448,7 @@
         el.onclick = null; paletteScroll.appendChild(el);
     }
 
-    /* --- MODAIS --- */
+    /* --- Modais --- */
     function openEdit(el) {
         currentItem = el; document.getElementById('editName').value = el.dataset.name;
         document.getElementById('modalEdit').style.display = 'flex';
@@ -449,12 +475,13 @@
     }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display='none'); currentItem = null; }
 
-    /* --- PERSISTÊNCIA --- */
+    /* --- Persistência --- */
     function saveState() {
         const data = [];
         document.querySelectorAll('.gondola').forEach(g => {
             const sData = [];
-            g.querySelectorAll('.shelf').forEach(s => {
+            g.querySelectorAll('.shelf-row').forEach(row => { 
+                const s = row.querySelector('.shelf');
                 const pData = [];
                 s.querySelectorAll('.product').forEach(p => pData.push({ name: p.dataset.name, color: p.dataset.color, size: p.dataset.size }));
                 sData.push(pData);
@@ -464,7 +491,7 @@
         localStorage.setItem('proAisleData', JSON.stringify(data));
     }
     function resetPlanogram() {
-        if(confirm("Deseja limpar todo o corredor e voltar ao padrão inicial?")) {
+        if(confirm("Resetar tudo para 3 gôndolas vazias?")) {
             localStorage.removeItem('proAisleData'); location.reload();
         }
     }
